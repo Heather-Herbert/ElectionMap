@@ -3,7 +3,7 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 import csv
-from array import array
+
 
 def simple_get(url):
     """
@@ -42,17 +42,26 @@ def log_error(e):
     print(e)
 
 baseURL = 'https://www.streetcheck.co.uk/postcode/'
-with open('C:\\Users\\heath\\python\\postcodes.csv', 'r') as csvFile:
+with open('postcodes.csv', 'r') as csvFile:
     reader = csv.reader(csvFile)
+    items = []
     for row in reader:
         response = simple_get(baseURL + row[0])
-        items = []
+        csvWritterFile = open('Demographic.csv', 'a')
+        csvWritterFile.write(row[0].encode('utf-8').strip())
         if response is not None:
             html = BeautifulSoup(response, 'html.parser')
             names = set()
             for li in html.select('td'):
-                #for name in li.text.split('\n'):
-                items.append(li)
-        with open('Demographic_' + row[0] + '.csv', 'w') as csvWritterFile:
-            writer = csv.writer(csvWritterFile)
-            writer.writerows(items)
+                for child in li.descendants:
+                    try:
+                        csvWritterFile = open('Demographic.csv', 'a')
+                        csvWritterFile.write(child.encode('utf-8').strip())
+                        csvWritterFile.write(',')
+                    except TypeError as e:
+                        print e
+                    finally:
+                        csvWritterFile.close()
+        csvWritterFile = open('Demographic.csv', 'a')
+        csvWritterFile.write("\n")
+        csvWritterFile.close()
